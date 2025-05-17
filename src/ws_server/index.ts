@@ -1,17 +1,43 @@
-import { WebSocketServer } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
+import { handleRegistration } from "./registration";
 
-const wss = new WebSocketServer({ port: 3000 });
+export function createWebSocketServer(port: number) {
+  const wss = new WebSocketServer({ port });
 
-wss.on("connection", (ws) => {
-  console.log("New client connected");
+  wss.on("connection", (ws: WebSocket) => {
+    console.log("New client connected");
 
-  ws.on("message", (message) => {
-    console.log(`Received message: ${message}`);
+    ws.on("message", (rawMessage) => {
+      try {
+        const message = JSON.parse(rawMessage.toString());
+
+        if (!message.type) throw new Error("Type is required");
+        if (message.id !== 0) throw new Error("Invalid message ID");
+
+        switch (message.type) {
+          case "reg":
+            const data = JSON.parse(message.data);
+            handleRegistration(ws, data);
+            break;
+          default:
+            throw new Error("Unknown command");
+        }
+      } catch (error) {
+        const errorText =
+          error instanceof Error ? error.message : "Unknown error";
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            data: JSON.stringify({ errorText: errorText }),
+            id: 0,
+          }),
+        );
+      }
+    });
+
+    ws.on("close", () => console.log("Client disconnected"));
   });
 
-  ws.on("close", () => {
-    console.log("Client disconnected");
-  });
-});
-
-console.log("WebSocket server is running on ws://localhost:3000");
+  console.log(`WS server started on ws://localhost:${port}`);
+  return wss;
+}
