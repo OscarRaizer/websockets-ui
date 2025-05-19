@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { handleRegistration } from "./usersRegistration";
-import { handleCreateRoom } from "./rooms/roomsHandler";
+import { handleCreateRoom, handleAddUserToRoom } from "./rooms/roomsHandler";
 import { connectedUsers } from "./connectedUsers";
 
 export function createWebSocketServer(port: number) {
@@ -24,7 +24,10 @@ export function createWebSocketServer(port: number) {
           case "create_room":
             handleCreateRoom(ws, wss);
             break;
-
+          case "add_user_to_room":
+            const addUserData = JSON.parse(message.data);
+            handleAddUserToRoom(ws, wss, addUserData);
+            break;
           default:
             throw new Error("Unknown command");
         }

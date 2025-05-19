@@ -20,6 +20,7 @@ export function createRoom(user: User): Room {
 export function getRooms(): Room[] {
   return rooms.filter((room) => room.roomUsers.length === 1);
 }
+
 export function addUserToRoom(roomId: number, user: User): Room | null {
   const room = rooms.find((r) => r.roomId === roomId);
   if (room && room.roomUsers.length < 2) {
