@@ -1,5 +1,6 @@
 import { WebSocket } from "ws";
 import { User, RegistrationRequest, RegistrationResponse } from "./types";
+import { connectedUsers } from "./connectedUsers";
 
 const users: User[] = [];
 
@@ -20,6 +21,7 @@ export function handleRegistration(ws: WebSocket, data: unknown) {
       password: request.password,
     };
     users.push(newUser);
+    connectedUsers.set(ws, newUser);
 
     const response: RegistrationResponse = {
       name: newUser.name,

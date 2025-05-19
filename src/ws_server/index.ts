@@ -1,5 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
-import { handleRegistration } from "./registration";
+import { handleRegistration } from "./usersRegistration";
+import { handleCreateRoom } from "./rooms/roomsHandler";
+import { connectedUsers } from "./connectedUsers";
 
 export function createWebSocketServer(port: number) {
   const wss = new WebSocketServer({ port });
@@ -19,6 +21,10 @@ export function createWebSocketServer(port: number) {
             const data = JSON.parse(message.data);
             handleRegistration(ws, data);
             break;
+          case "create_room":
+            handleCreateRoom(ws, wss);
+            break;
+
           default:
             throw new Error("Unknown command");
         }
@@ -35,7 +41,10 @@ export function createWebSocketServer(port: number) {
       }
     });
 
-    ws.on("close", () => console.log("Client disconnected"));
+    ws.on("close", () => {
+      console.log("Client disconnected");
+      connectedUsers.delete(ws);
+    });
   });
 
   console.log(`WS server started on ws://localhost:${port}`);
