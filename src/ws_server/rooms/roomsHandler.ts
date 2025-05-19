@@ -2,6 +2,8 @@ import { WebSocket, WebSocketServer } from "ws";
 import { createRoom, getRooms, removeRoom, addUserToRoom } from "./rooms";
 import { connectedUsers } from "../connectedUsers";
 
+let gameIdCounter = 1;
+
 export function handleCreateRoom(ws: WebSocket, wss: WebSocketServer) {
   const user = connectedUsers.get(ws);
   if (!user) {
@@ -83,7 +85,12 @@ export function handleAddUserToRoom(
 
   broadcastUpdateRooms(wss);
 
-  room.roomUsers.forEach((roomUser) => {
+  const idGame = gameIdCounter++;
+  const playerIds = room.roomUsers.map(
+    (_, index) => `${idGame}-player${index + 1}`,
+  );
+
+  room.roomUsers.forEach((roomUser, index) => {
     const client = Array.from(connectedUsers.entries()).find(
       ([_, u]) => u.name === roomUser.name,
     )?.[0];
@@ -92,8 +99,8 @@ export function handleAddUserToRoom(
         JSON.stringify({
           type: "create_game",
           data: JSON.stringify({
-            idGame: room.roomId,
-            idPlayer: roomUser.name,
+            idGame: idGame,
+            idPlayer: playerIds[index],
           }),
           id: 0,
         }),
